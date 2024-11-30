@@ -1,14 +1,19 @@
 from datetime import datetime, timezone
-from sqlalchemy import Table, Column, Integer, String, TIMESTAMP, ForeignKey
+from sqlalchemy import Column, Integer, String, TIMESTAMP, ForeignKey
 
-from core.database import metadata
+from database.models import Base
 
 
-user_tag = Table(
-    "user_tag",
-    metadata,
-    Column("id", Integer, primary_key=True),
-    Column("fk_user", Integer, ForeignKey("user.id"), index=True),
-    Column("tag", String, nullable=False),
-    Column("created_at", TIMESTAMP, default=datetime.now(timezone.utc), nullable=False),
-)
+class UserTag(Base):
+    __tablename__ = "user_tags"
+
+    user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
+    tag_id = Column(Integer, ForeignKey("tags.id"), primary_key=True)
+    created_at = Column(TIMESTAMP, default=datetime.now(timezone.utc), nullable=False)
+
+
+class Tag(Base):
+    __tablename__ = "tags"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, nullable=False)

@@ -1,10 +1,10 @@
-from core.database import engine
+from database.connection.session import engine, SessionLocal
 
 
-def get_connection():
-    """Получение подключения к базе данных."""
-    conn = engine.connect()
+def get_db():
+    """Получение сессии базы данных."""
+    db = SessionLocal()
     try:
-        yield conn
+        yield db
     finally:
-        conn.close()
+        db.close()

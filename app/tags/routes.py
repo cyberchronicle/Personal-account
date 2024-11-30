@@ -1,8 +1,9 @@
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import insert, select
+from sqlalchemy import sel
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
-from models import user_tag
+from models import UserTag, Tag
 from schemas import TagsInput, TagsOutput
 from dependencies import get_connection
 
@@ -26,13 +27,27 @@ def save_user_tags(user_id: int, tags_input: TagsInput, conn=Depends(get_connect
     if not tags_input.tags:
         raise HTTPException(status_code=400, detail="Tags list cannot be empty")
 
-    for tag in tags_input.tags:
-        query = (
-            pg_insert(user_tag)
-            .values(fk_user=user_id, tag=tag)
-            .on_conflict_do_nothing(index_elements=["fk_user", "tag"])
+    tags_insert_query = (
+        pg_insert(Tag)
+        .values([{"name": name} for name in tags_input.tags])
+        .on_conflict_do_nothing(index_elements=["name"])
+    )
+    conn.execute(tags_insert_query)
+
+
+    user_tags_query = (
+        pg_insert(UserTag)
+        .from_select(
+            ["user_id", "tag_id", "created_at"],
+            select(
+                user_id.label("user_id"),
+                Tag.id.label("tag_id"),
+                datetime.now(timezone.utc).label("created_at"),
+            ).where(Tag.name.in_(tags_input.tags))
         )
-        conn.execute(query)
+        .on_conflict_do_nothing(index_elements=["user_id", "tag_id"])
+    )
+    conn.execute(user_tags_query)
 
     return {"message": "Tags successfully saved"}
 
@@ -49,7 +64,11 @@ def get_user_tags(user_id: int, conn=Depends(get_connection)):
     :raises HTTPException: Если для указанного пользователя теги не найдены.
     """
 
-    query = select(user_tag.c.tag).where(user_tag.c.fk_user == user_id)
+    query = (
+        select(Tag.name)
+        .join(UserTag, UserTag.tag_id == Tag.id)
+        .where(UserTag.user_id == user_id)
+    )
     result = conn.execute(query).fetchall()
 
     if not result:
