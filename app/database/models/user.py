@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Integer, String
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, Integer, String, DateTime, TIMESTAMP
 
 from app.database.models.base import Base
 
@@ -10,3 +12,4 @@ class User(Base):
     login = Column(String)
     first_name = Column(String)
     last_name = Column(String)
+    created_at = Column(TIMESTAMP(timezone=True), default=datetime.now(timezone.utc), nullable=False)

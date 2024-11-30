@@ -9,7 +9,7 @@ class UserTag(Base):
 
     user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
     tag_id = Column(Integer, ForeignKey("tags.id"), primary_key=True)
-    created_at = Column(TIMESTAMP, default=datetime.now(timezone.utc), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), default=datetime.now(timezone.utc), nullable=False)
 
 
 class Tag(Base):
