@@ -3,11 +3,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Config(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
-    api_prefix: str = "/api"
-    app_name: str = "FastAPI App"
+    app_name: str = "Личный кабинет"
     app_host: str = "http://localhost"
     app_port: int = 8000
-    app_desc: str = "FastAPI App Description"
+    app_desc: str = "Мастер-система личной информации пользователя, закладок и тегов"
     app_version: str = "0.1.0"
     debug: bool = False
     logging_level: str = "info"

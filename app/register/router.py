@@ -10,15 +10,16 @@ router = APIRouter(prefix="/register", tags=["register"])
 @router.post("")
 async def register_user(
         register_request: RegisterRequest,
-        x_user_id: str = Header(None),
+        user_id: int = Header(None, alias="x-user-id"),
         session: SessionLocal = Depends(get_session)
 ):
-    existing_user = session.query(User).filter(User.id == x_user_id).first()
+    """Регистрация пользователя"""
+    existing_user = session.query(User).filter(User.id == user_id).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="User already exists")
 
     new_user = User(
-        id=x_user_id,
+        id=user_id,
         login=register_request.login,
         first_name=register_request.first_name,
         last_name=register_request.last_name

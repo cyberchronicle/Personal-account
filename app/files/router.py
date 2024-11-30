@@ -1,15 +1,17 @@
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, UploadFile, Header
 
-from app.s3.minio import upload_file_to_s3
+from app.s3.minio import upload_file_to_s3, create_key, get_link_on_s3
 
 router = APIRouter(prefix="/files", tags=["files"])
 
 
-@router.post("/user-icon-upload")
-def upload_file(file: UploadFile) -> None:
-    link = upload_file_to_s3(file)
+@router.post("/icon-upload")
+def icon_upload(file: UploadFile, user_id: int = Header(None, alias="x-user-id")) -> str:
+    """Загрузка аватарки пользователя"""
+    return upload_file_to_s3(file, create_key("icons", str(user_id)))
 
 
-# @router.get("/user-icon-get-link")
-# def upload_file(file: UploadFile) -> None:
-#     upload_file_to_s3(file)
+@router.get("/icon-get-link")
+def icon_get_link(user_id: int = Header(None, alias="x-user-id")) -> str:
+    """Получить ссылку на аватарку пользователя"""
+    return get_link_on_s3(create_key("icons", str(user_id)))

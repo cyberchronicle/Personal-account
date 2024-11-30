@@ -18,9 +18,17 @@ except ClientError:
     s3_client.create_bucket(Bucket=bucket_name)
 
 
-def upload_file_to_s3(file) -> str:
-    s3_client.upload_fileobj(file.file, bucket_name, file.filename)
-    link = s3_client.generate_presigned_url('get_object',
-                                            Params={'Bucket': bucket_name, 'Key': file.filename},
+def create_key(folder: str, key: str) -> str:
+    return f"{folder}/{key}"
+
+
+def upload_file_to_s3(file, key: str) -> str:
+    s3_client.upload_fileobj(file.file, bucket_name, key)
+
+    return get_link_on_s3(key)
+
+
+def get_link_on_s3(key: str) -> str:
+    return s3_client.generate_presigned_url('get_object',
+                                            Params={'Bucket': bucket_name, 'Key': key},
                                             ExpiresIn=3600)
-    return link
