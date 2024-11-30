@@ -1,14 +1,18 @@
-from fastapi import FastAPI, UploadFile
-from app.core.s3 import upload_file_to_s3
+from fastapi import FastAPI
 
-app = FastAPI()
+from app.config import cfg
+from app.files.router import router as files_router
+from app.register.router import router as register_router
 
+app = FastAPI(
+    title=cfg.app_name,
+    description=cfg.app_desc,
+    version=cfg.app_version,
+    debug=cfg.debug,
+)
+app.include_router(files_router)
+app.include_router(register_router)
 
 @app.get("/")
 def read_root() -> dict:
     return {"Hello": "World"}
-
-
-@app.post("/upload")
-def upload_file(file: UploadFile) -> None:
-    upload_file_to_s3(file)

@@ -1,7 +1,9 @@
-fastapi
+fastapi~=0.115.4
 uvicorn
-sqlalchemy
+sqlalchemy~=2.0.36
 psycopg2-binary
-boto3
+boto3~=1.35.54
 python-dotenv
 python-multipart
+botocore~=1.35.54
+pydantic~=2.9.2
