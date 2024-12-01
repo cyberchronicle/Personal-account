@@ -1,6 +1,6 @@
 import boto3
 from botocore.client import BaseClient
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, EndpointConnectionError
 
 from app.config import cfg
 
@@ -16,7 +16,7 @@ class S3Service:
         self.bucket_name = cfg.s3_bucket_name
         try:
             self.s3_client.head_bucket(Bucket=self.bucket_name)
-        except ClientError:
+        except EndpointConnectionError:
             # Если бакет не существует, создаем его
             self.s3_client.create_bucket(Bucket=self.bucket_name)
 
@@ -24,15 +24,26 @@ class S3Service:
     def create_key(folder: str, key: str) -> str:
         return f"{folder}/{key}"
 
-    def upload_file_to_s3(self, file, key: str) -> str:
+    def upload_file(self, file, key: str) -> str:
         self.s3_client.upload_fileobj(file.file, self.bucket_name, key)
 
-        return self.get_link_on_s3(key)
+        return self.get_link(key)
 
-    def get_link_on_s3(self, key: str) -> str:
+    def check_object_exists(self, key):
+        try:
+            # Попробуем получить метаданные объекта
+            self.s3_client.head_object(Bucket=self.bucket_name, Key=key)
+            return True
+        except ClientError:
+            return False  # Объект не найден
+
+    def get_link(self, key):
+        if not self.check_object_exists(key):
+            raise FileNotFoundError("Object does not exist.")
         return self.s3_client.generate_presigned_url('get_object',
-                                                     Params={'Bucket': self.bucket_name, 'Key': key},
-                                                     ExpiresIn=3600)
+                                                      Params={'Bucket': self.bucket_name, 'Key': key},
+                                                      ExpiresIn=3600)
+
 
 
 s3_service = S3Service()

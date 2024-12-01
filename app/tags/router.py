@@ -42,7 +42,6 @@ def update_user_tags(tags_input: TagsInput,
     )
     session.execute(tags_insert_query)
 
-
     user_tags_query = (
         pg_insert(UserTag)
         .from_select(
