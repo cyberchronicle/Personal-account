@@ -15,6 +15,10 @@ pip-install:
 docker:
 	docker-compose up -d --build
 
+.PHONY: db
+db:
+	docker-compose up db -d --build
+
 .PHONY: fastapi
 fastapi:
 	python3 -m uvicorn --app-dir ./app/ main:app --reload --host 0.0.0.0 --port 8001

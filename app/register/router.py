@@ -28,7 +28,3 @@ async def register_user(
     session.add(new_user)
     session.commit()
 
-
-# @router.get("/user-icon-get-link")
-# def upload_file(file: UploadFile) -> None:
-#     upload_file_to_s3(file)
