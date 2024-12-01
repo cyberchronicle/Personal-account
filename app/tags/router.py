@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Header
-from sqlalchemy import select, literal
+from sqlalchemy import select, delete, literal
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.database.connection.session import get_session
 from app.database.models.tag import UserTag, Tag
@@ -54,8 +55,13 @@ def update_user_tags(tags_input: TagsInput,
         )
         .on_conflict_do_nothing(index_elements=["user_id", "tag_id"])
     )
-    session.execute(user_tags_query)
-    session.commit()
+
+    try:
+        session.execute(user_tags_query)
+        session.commit()
+    except SQLAlchemyError as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
     return {"message": "Tags successfully saved"}
 
@@ -89,3 +95,42 @@ def get_user_tags(user_id: int = Header(None, alias="x-user-id"),
         raise HTTPException(status_code=404, detail="No tags found for this user")
 
     return {"tags": [row[0] for row in result]}
+
+
+@router.post("/delete", response_model=dict)
+def delete_user_tags(tags_input: TagsInput,
+                     user_id: int = Header(None, alias="x-user-id"),
+                     session=Depends(get_session)):
+
+    """
+    Удаляет теги для пользователя.
+
+    :param user_id: Идентификатор пользователя, для которого удаляются теги.
+    :param tags_input: Список тегов, переданных пользователем в формате TagsInput.
+    :param session: Подключение к базе данных, передаётся через Depends.
+    :return: Словарь с сообщением о статусе операции.
+    :raises HTTPException: Если список тегов пустой, не найден пользователь или произошла ошибка базы данных.
+    """
+    if not tags_input.tags:
+        raise HTTPException(status_code=400, detail="Tags list cannot be empty")
+
+    user_exists_query = select(User).where(User.id == user_id)
+    user_exists = session.execute(user_exists_query).fetchone()
+    if not user_exists:
+        raise HTTPException(status_code=404, detail=f"User with id {user_id} not found")
+
+    delete_query = (
+        delete(UserTag)
+        .where(UserTag.user_id == user_id, UserTag.tag_id.in_(
+            select(Tag.id).where(Tag.name.in_(tags_input.tags))
+        ))
+    )
+
+    try:
+        session.execute(delete_query)
+        session.commit()
+    except SQLAlchemyError as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+    return {"message": "Tags successfully deleted"}
