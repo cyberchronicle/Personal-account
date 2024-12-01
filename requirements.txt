@@ -7,3 +7,4 @@ python-dotenv
 python-multipart
 botocore~=1.35.54
 pydantic~=2.9.2
+pydantic_settings
