@@ -19,5 +19,5 @@ class Bookmark(Base):
 
 class BookmarkInShelf(Base):
     __tablename__ = 'bookmarks_inshelf'
-    fk_shelf = Column(Integer, ForeignKey('shelf.id', onupdate='CASCADE', ondelete='DELETE'), nullable=False)
-    fk_bookmark = Column(Integer, ForeignKey('bookmarks.id', onupdate='CASCADE', ondelete='DELETE'), nullable=False)
+    fk_shelf = Column(Integer, ForeignKey('shelf.id', onupdate='CASCADE', ondelete='DELETE'), primary_key=True, nullable=False)
+    fk_bookmark = Column(Integer, ForeignKey('bookmarks.id', onupdate='CASCADE', ondelete='DELETE'), primary_key=True, nullable=False)

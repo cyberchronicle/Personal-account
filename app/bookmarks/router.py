@@ -15,7 +15,7 @@ router = APIRouter(prefix="/bookmarks", tags=["bookmarks"])
 
 
 # проверяет существование пользователя
-def check_user(user_id: int, session) -> None:
+def check_user(user_id: int, session):
     user_exists_query = select(User).where(User.id.is_(user_id))
     user_exists = session.execute(user_exists_query).fetchone()
     if not user_exists:
@@ -75,9 +75,9 @@ def get_bookmarks(shelf_id: int,
 
 
 @router.post("/create_shelf", response_model=dict)
-def create_bookmark(shelf_name: CreateShelf,
-                    user_id: int = Header(None, alias="x-user-id"),
-                    session=Depends(get_session)):
+def create_shelf(shelf_name: CreateShelf,
+                 user_id: int = Header(None, alias="x-user-id"),
+                 session=Depends(get_session)):
 
     check_user(user_id, session)
 
@@ -98,7 +98,6 @@ def create_bookmark(shelf_name: CreateShelf,
     return {"message": "Shelf successfully created"}
 
 
-# TODO: remove bookmark from shelf, remove shelf
 @router.post("/add_bookmark", response_model=dict)
 def add_bookmark(new_bookmark: AddBookmark,
                  user_id: int = Header(None, alias="x-user-id"),
