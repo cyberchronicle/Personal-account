@@ -16,7 +16,7 @@ class S3Service:
         self.bucket_name = cfg.s3_bucket_name
         try:
             self.s3_client.head_bucket(Bucket=self.bucket_name)
-        except EndpointConnectionError:
+        except ClientError:
             # Если бакет не существует, создаем его
             self.s3_client.create_bucket(Bucket=self.bucket_name)
 

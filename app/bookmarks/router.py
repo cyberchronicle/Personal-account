@@ -16,7 +16,7 @@ router = APIRouter(prefix="/bookmarks", tags=["bookmarks"])
 
 # проверяет существование пользователя
 def check_user(user_id: int, session) -> None:
-    user_exists_query = select(User).where(User.id.is_(user_id))
+    user_exists_query = select(User).where(User.id == user_id)
     user_exists = session.execute(user_exists_query).fetchone()
     if not user_exists:
         raise HTTPException(status_code=404, detail=f"User with id {user_id} not found")
@@ -32,8 +32,8 @@ def get_shelves(user_id: int = Header(None, alias="x-user-id"),
     get_shelves_query = (select(Shelf.id, Shelf.name, Bookmark.title)
                          .join(BookmarkInShelf, Shelf.id == BookmarkInShelf.fk_shelf)
                          .join(Bookmark, Bookmark.id == BookmarkInShelf.fk_bookmark)
-                         .where(Shelf.fk_user.is_(user_id))
-                         .group_by(Shelf.id, Shelf.name))
+                         .where(Shelf.fk_user == user_id)
+                         .group_by(Shelf.id, Shelf.name, Bookmark.title))
     result = session.execute(get_shelves_query).fetchall()
     if not result:
         raise HTTPException(status_code=404, detail="No bookmarks found for this user")
