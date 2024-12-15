@@ -2,7 +2,7 @@ from fastapi import FastAPI
 
 from app.config import cfg
 from app.files.router import router as files_router
-from app.register.router import router as register_router
+from app.users.router import router as register_router
 from app.tags.router import router as tags_router
 from app.bookmarks.router import router as bookmarks_router
 
