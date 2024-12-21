@@ -2,7 +2,10 @@ version: '3.8'
 
 services:
   web:
-    build: .
+    build:
+      context: .
+      args:
+        - PLATFORM=linux/amd64
     container_name: fastapi_app
     environment:
       DOCKER_ENV: docker.env
