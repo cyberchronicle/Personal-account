@@ -3,9 +3,11 @@ from typing import List
 
 
 class ReturnShelves(BaseModel):
-    id: int
-    name: str
-    bookmarks_names: List[str]
+    shelves: List[dict]
+
+
+class ReturnOnlyShelves(BaseModel):
+    id: List[int]
 
 
 class CreateShelf(BaseModel):
@@ -13,8 +15,7 @@ class CreateShelf(BaseModel):
 
 
 class ReturnBookmarks(BaseModel):
-    bookmark_id: int
-    bookmark_name: str
+    bookmarks: List[dict]
 
 
 class AddBookmark(BaseModel):
