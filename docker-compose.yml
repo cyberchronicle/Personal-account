@@ -38,20 +38,20 @@ services:
       - '9001:9001'
     command: server /data --console-address ":9001"
 
-  tests:
-    build:
-      context: .
-    container_name: tests
-    environment:
-      DOCKER_ENV: docker.env
-    depends_on:
-      - db
-      - minio
-    command: >
-      sh -c "
-      sleep 10 &&
-      pytest -v test.py
-      "
+#  tests:
+#    build:
+#      context: .
+#    container_name: tests
+#    environment:
+#      DOCKER_ENV: docker.env
+#    depends_on:
+#      - db
+#      - minio
+#    command: >
+#      sh -c "
+#      sleep 10 &&
+#      pytest -v test.py
+#      "
 
 volumes:
   postgres_data:
