@@ -152,6 +152,23 @@ def test_get_user_not_found(client, db_session):
 
 # Тесты для bookmarks
 
+def test_get_only_shelves_success(client, db_session, test_user, test_shelf):
+    """Тест успешного получения только идентификаторов полок."""
+    headers = {"x-user-id": str(test_user.id)}
+    response = client.get("/bookmarks/get_only_shelves", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json() == {"id": [test_shelf.id]}
+
+
+def test_get_only_shelves_empty(client, test_user):
+    """Тест получения пустого списка идентификаторов полок."""
+    headers = {"x-user-id": str(test_user.id)}
+    response = client.get("/bookmarks/get_only_shelves", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json() == {"id": []}
+
 def test_get_shelves_success(client, db_session, test_user, test_shelf, test_bookmark):
     """Тест успешного получения списка полок."""
     db_session.add(BookmarkInShelf(fk_shelf=test_shelf.id, fk_bookmark=test_bookmark.id))
@@ -161,21 +178,43 @@ def test_get_shelves_success(client, db_session, test_user, test_shelf, test_boo
     response = client.get("/bookmarks/get_shelves", headers=headers)
 
     assert response.status_code == 200
-    assert response.json() == [
-        {
-            "id": test_shelf.id,
-            "name": test_shelf.name,
-            "bookmarks": [test_bookmark.title]
-        }
-    ]
+    assert response.json() == {
+        "shelves": [
+            {
+                "id": test_shelf.id,
+                "name": test_shelf.name,
+                "bookmarks": [test_bookmark.title],
+            }
+        ]
+    }
 
-
-def test_get_shelves_no_data(client, test_user):
-    """Тест получения полок, когда их нет."""
+def test_get_shelves_empty(client, test_user):
+    """Тест получения пустого списка полок."""
     headers = {"x-user-id": str(test_user.id)}
     response = client.get("/bookmarks/get_shelves", headers=headers)
-    assert response.status_code == 404
-    assert response.json()["detail"] == "No bookmarks found for this user"
+
+    assert response.status_code == 200
+    assert response.json() == {"shelves": []}
+
+def test_get_bookmarks_success(client, db_session, test_user, test_shelf, test_bookmark):
+    """Тест успешного получения закладок с полки."""
+    db_session.add(BookmarkInShelf(fk_shelf=test_shelf.id, fk_bookmark=test_bookmark.id))
+    db_session.commit()
+
+    headers = {"x-user-id": str(test_user.id)}
+    response = client.get(f"/bookmarks/get_bookmarks?shelf_id={test_shelf.id}", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json() == {"bookmarks": [{"id": test_bookmark.id, "title": test_bookmark.title}]}
+
+
+def test_get_bookmarks_empty(client, test_user, test_shelf):
+    """Тест получения пустого списка закладок."""
+    headers = {"x-user-id": str(test_user.id)}
+    response = client.get(f"/bookmarks/get_bookmarks?shelf_id={test_shelf.id}", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json() == {"bookmarks": []}
 
 
 def test_create_shelf_success(client, test_user):
@@ -187,34 +226,27 @@ def test_create_shelf_success(client, test_user):
     assert response.status_code == 200
     assert response.json()["message"] == "Shelf successfully created"
 
-
 def test_create_shelf_user_not_found(client):
     """Тест создания полки для несуществующего пользователя."""
     headers = {"x-user-id": "999"}
     payload = {"name": "New Shelf"}
-
     response = client.post("/bookmarks/create_shelf", json=payload, headers=headers)
     assert response.status_code == 404
     assert response.json()["detail"] == "User with id 999 not found"
 
-
-def test_get_bookmarks_success(client, db_session, test_user, test_shelf, test_bookmark):
-    """Тест успешного получения закладок с полки."""
-    db_session.add(BookmarkInShelf(fk_shelf=test_shelf.id, fk_bookmark=test_bookmark.id))
-    db_session.commit()
-
+def test_add_bookmark_success(client, test_user, test_shelf):
+    """Тест успешного добавления закладки."""
     headers = {"x-user-id": str(test_user.id)}
-    response = client.get(f"/bookmarks/get_bookmarks?shelf_id={test_shelf.id}", headers=headers)
-    assert response.status_code == 200
-    assert response.json() == [{"id": test_bookmark.id, "title": test_bookmark.title}]
+    payload = {
+        "bookmark_id": 2,
+        "title": "New Bookmark",
+        "shelf_id": test_shelf.id,
+    }
 
-
-def test_get_bookmarks_empty_shelf(client, test_user, test_shelf):
-    """Тест получения закладок с пустой полки."""
-    headers = {"x-user-id": str(test_user.id)}
-    response = client.get(f"/bookmarks/get_bookmarks?shelf_id={test_shelf.id}", headers=headers)
+    response = client.post("/bookmarks/add_bookmark", json=payload, headers=headers)
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json()["message"] == "Bookmark successfully added"
+
 
 def test_delete_bookmark_success(client, db_session, test_user, test_shelf, test_bookmark):
     """Тест успешного удаления закладки."""
@@ -228,12 +260,10 @@ def test_delete_bookmark_success(client, db_session, test_user, test_shelf, test
     assert response.status_code == 200
     assert response.json()["message"] == "Bookmark removed from shelf"
 
-
 def test_delete_bookmark_not_found(client, test_user, test_shelf):
     """Тест удаления несуществующей закладки."""
     headers = {"x-user-id": str(test_user.id)}
     payload = {"bookmark_id": 999, "shelf_id": test_shelf.id}
-
     response = client.post("/bookmarks/delete_bookmark_from_shelf", json=payload, headers=headers)
     assert response.status_code == 200
     assert response.json()["message"] == "Bookmark removed from shelf"
