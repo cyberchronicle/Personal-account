@@ -9,6 +9,9 @@ from app.bookmarks.schema import (ReturnShelves, CreateShelf, ReturnOnlyShelves,
                                   RemoveShelf)
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy import select, delete
+from sqlalchemy.schema import MetaData
+
+from app.database.connection.session import engine
 
 
 router = APIRouter(prefix="/bookmarks", tags=["bookmarks"])
@@ -71,6 +74,7 @@ def get_shelves(user_id: int = Header(None, alias="x-user-id"),
         counter += 1
         new_shelf["bookmarks"].append(shelf[2])
     response_list.append(new_shelf)
+
     return {"shelves": response_list}
 
 
@@ -138,7 +142,7 @@ def add_bookmark(new_bookmark: AddBookmark,
     # формируем запросы
     add_bookmark_query = (
         pg_insert(Bookmark)
-        .values(id=new_bookmark.bookmark_id)
+        .values(id=new_bookmark.bookmark_id).on_conflict_do_nothing()
     )
 
     add_link_query = (

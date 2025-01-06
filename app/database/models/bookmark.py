@@ -12,13 +12,11 @@ class Shelf(Base):
 
 class Bookmark(Base):
     __tablename__ = 'bookmarks'
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    title = Column(String, nullable=False)
+    id = Column(Integer, primary_key=True)
 
 
 class BookmarkInShelf(Base):
     __tablename__ = 'bookmarks_inshelf'
-    fk_shelf = Column(Integer, ForeignKey('shelf.id', onupdate='CASCADE', ondelete='CASCADE'),
-                      primary_key=True, nullable=False)
-    fk_bookmark = Column(Integer, ForeignKey('bookmarks.id', onupdate='CASCADE', ondelete='CASCADE'),
-                         primary_key=True, nullable=False)
+    title = Column(String, nullable=False)
+    fk_shelf = Column(Integer, ForeignKey('shelf.id'), primary_key=True, nullable=False)
+    fk_bookmark = Column(Integer, ForeignKey('bookmarks.id'), primary_key=True, nullable=False)
