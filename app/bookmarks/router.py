@@ -9,6 +9,9 @@ from app.bookmarks.schema import (ReturnShelves, CreateShelf, ReturnOnlyShelves,
                                   RemoveShelf)
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy import select, delete
+from sqlalchemy.schema import MetaData
+
+from app.database.connection.session import engine
 
 
 router = APIRouter(prefix="/bookmarks", tags=["bookmarks"])
@@ -45,12 +48,11 @@ def get_shelves(user_id: int = Header(None, alias="x-user-id"),
     check_user(user_id, session)
 
     # формируем и отправляем запрос
-    get_shelves_query = (select(Shelf.id, Shelf.name, Bookmark.title)
+    get_shelves_query = (select(Shelf.id, Shelf.name, BookmarkInShelf.title)
                          .select_from(Shelf)
                          .join(BookmarkInShelf, BookmarkInShelf.fk_shelf == Shelf.id)
-                         .join(Bookmark, Bookmark.id == BookmarkInShelf.fk_bookmark)
                          .where(Shelf.fk_user == user_id)
-                         .group_by(Shelf.id, Shelf.name, Bookmark.title))
+                         .group_by(Shelf.id, Shelf.name, BookmarkInShelf.title))
     result = session.execute(get_shelves_query).fetchall()
     if not result:
         return {"shelves": []}
@@ -72,6 +74,7 @@ def get_shelves(user_id: int = Header(None, alias="x-user-id"),
         counter += 1
         new_shelf["bookmarks"].append(shelf[2])
     response_list.append(new_shelf)
+
     return {"shelves": response_list}
 
 
@@ -83,7 +86,7 @@ def get_bookmarks(shelf_id: int,
     check_user(user_id, session)
 
     # формируем и отправляем запрос
-    get_bookmarks_query = (select(Bookmark.id, Bookmark.title)
+    get_bookmarks_query = (select(Bookmark.id, BookmarkInShelf.title)
                            .join(BookmarkInShelf, Bookmark.id == BookmarkInShelf.fk_bookmark)
                            .where(BookmarkInShelf.fk_shelf == shelf_id))
     result = session.execute(get_bookmarks_query).fetchall()
@@ -139,12 +142,14 @@ def add_bookmark(new_bookmark: AddBookmark,
     # формируем запросы
     add_bookmark_query = (
         pg_insert(Bookmark)
-        .values(id=new_bookmark.bookmark_id, title=new_bookmark.title)
+        .values(id=new_bookmark.bookmark_id).on_conflict_do_nothing()
     )
 
     add_link_query = (
         pg_insert(BookmarkInShelf)
-        .values(fk_bookmark=new_bookmark.bookmark_id, fk_shelf=new_bookmark.shelf_id)
+        .values(fk_bookmark=new_bookmark.bookmark_id,
+                title=new_bookmark.title,
+                fk_shelf=new_bookmark.shelf_id)
     )
 
     # пытаемся провести транзакцию

@@ -14,16 +14,11 @@ class Shelf(Base):
 
 class Bookmark(Base):
     __tablename__ = 'bookmarks'
-    __table_args__ = ({"schema": "personal_account"})
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    title = Column(String, nullable=False)
+    id = Column(Integer, primary_key=True)
 
 
 class BookmarkInShelf(Base):
     __tablename__ = 'bookmarks_inshelf'
-    __table_args__ = ({"schema": "personal_account"})
-    fk_shelf = Column(Integer, ForeignKey('personal_account.shelf.id', onupdate='CASCADE', ondelete='CASCADE'),
-                      primary_key=True, nullable=False)
-    fk_bookmark = Column(Integer, ForeignKey('personal_account.bookmarks.id', onupdate='CASCADE', ondelete='CASCADE'),
-                         primary_key=True, nullable=False)
+    title = Column(String, nullable=False)
+    fk_shelf = Column(Integer, ForeignKey('shelf.id'), primary_key=True, nullable=False)
+    fk_bookmark = Column(Integer, ForeignKey('bookmarks.id'), primary_key=True, nullable=False)
