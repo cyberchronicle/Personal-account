@@ -2,12 +2,15 @@ version: '3.8'
 
 services:
   web:
-    build: .
+    build:
+      context: .
+      args:
+        - PLATFORM=linux/amd64
     container_name: fastapi_app
     environment:
       DOCKER_ENV: docker.env
     ports:
-      - "8000:8000"
+      - '8000:8000'
     env_file:
       - docker.env
     depends_on:
@@ -20,9 +23,10 @@ services:
     env_file:
       - docker.env
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init_schema.sql:/docker-entrypoint-initdb.d/init_schema.sql
 
   minio:
     image: minio/minio
@@ -30,9 +34,24 @@ services:
     env_file:
       - docker.env
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - '9000:9000'
+      - '9001:9001'
     command: server /data --console-address ":9001"
+
+#  tests:
+#    build:
+#      context: .
+#    container_name: tests
+#    environment:
+#      DOCKER_ENV: docker.env
+#    depends_on:
+#      - db
+#      - minio
+#    command: >
+#      sh -c "
+#      sleep 10 &&
+#      pytest -v test.py
+#      "
 
 volumes:
   postgres_data:

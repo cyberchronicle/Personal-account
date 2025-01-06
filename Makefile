@@ -39,3 +39,6 @@ migration-up:
 migration-down:
 	goose -dir "$(MIGRATION_FOLDER)" postgres "$(POSTGRES_SETUP_TEST)" down
 
+.PHONY: tests
+tests:
+	docker-compose up tests

@@ -5,8 +5,10 @@ from app.database.models import Base
 
 class Shelf(Base):
     __tablename__ = 'shelf'
+    __table_args__ = ({"schema": "personal_account"})
+
     id = Column(Integer, primary_key=True, autoincrement=True)
-    fk_user = Column(Integer, ForeignKey('users.id'), nullable=False)
+    fk_user = Column(Integer, ForeignKey('personal_account.users.id'), nullable=False)
     name = Column(String)
 
 
